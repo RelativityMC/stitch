@@ -232,6 +232,10 @@ class GenState {
         if (promoteRecordComponent) {
             recordComponentNames.put(recordComponent, newName);
         }
+        System.out.println("FIELD\t" + c.getFullyQualifiedName()
+                + "\t" + f.getDescriptor()
+                + "\t" + f.getName()
+                + "\t" + newName);
         return newName;
     }
 
@@ -428,6 +432,10 @@ class GenState {
         if (promoteRecordComponent) {
             recordComponentNames.put(recordComponent, newName);
         }
+        System.out.println("METHOD\t" + c.getFullyQualifiedName()
+                + "\t" + m.getDescriptor()
+                + "\t" + m.getName()
+                + "\t" + newName + "");
         return newName;
     }
 
@@ -479,6 +487,7 @@ class GenState {
 
                 if (cname == null) {
                     cname = next(c, "class");
+                    System.out.println("CLASS\t" + c.getFullyQualifiedName() + "\t" + cname);
                 }
             }
         }
