@@ -155,13 +155,28 @@ public class JarReader {
         @Override
         public void visitEnd() {
             Set<JarRecordComponentEntry> recordComponentEntries = StitchUtil.newIdentityHashSet();
-            recordComponentEntries.addAll(this.entry.recordComponents.values());
-            for (JarMethodEntry methodEntry : this.entry.methods.values()) {
-                if (methodEntry.recordComponent != null) {
-                    if (!recordComponentEntries.remove(methodEntry.recordComponent)) {
-                        System.out.println(String.format("Duplicate assignment for record component %s;%s", this.entry.getFullyQualifiedName(), methodEntry.recordComponent.getKey()));
+            outer_loop0:
+            while (true) {
+                recordComponentEntries.clear();
+                recordComponentEntries.addAll(this.entry.recordComponents.values());
+                for (JarMethodEntry methodEntry : this.entry.methods.values()) {
+                    if (methodEntry.recordComponent != null) {
+                        JarRecordComponentEntry recordComponent = methodEntry.recordComponent;
+                        if (!recordComponentEntries.remove(recordComponent)) {
+                            System.out.println(String.format("Duplicate assignment for record component %s;%s", this.entry.getFullyQualifiedName(), recordComponent.getKey()));
+
+                            // retry
+                            for (JarMethodEntry methodEntry1 : this.entry.methods.values()) {
+                                if (methodEntry1.recordComponent == recordComponent) {
+                                    System.out.println(String.format("Demoting record getter %s;%s due to conflicts", this.entry.getFullyQualifiedName(), methodEntry1.getKey()));
+                                    methodEntry1.recordComponent = null;
+                                }
+                            }
+                            continue outer_loop0;
+                        }
                     }
                 }
+                break;
             }
             outer_loop:
             for (Iterator<JarRecordComponentEntry> iterator = recordComponentEntries.iterator(); iterator.hasNext(); ) {
