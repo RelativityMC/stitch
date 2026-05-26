@@ -458,7 +458,11 @@ class GenState {
                         String[] r = findName.split("\\$");
                         cname = r[r.length - 1];
                         if (r.length == 1) {
-                            translatedPrefix = "";
+                            if (cname.startsWith(this.targetNamespace)) {
+                                cname = cname.substring(this.targetNamespace.length());
+                            } else {
+                                translatedPrefix = "";
+                            }
                         }
                     }
                 }
@@ -471,7 +475,11 @@ class GenState {
                             String[] r = findName.split("\\$");
                             cname = r[r.length - 1];
                             if (r.length == 1) {
-                                translatedPrefix = "";
+                                if (cname.startsWith(this.targetNamespace)) {
+                                    cname = cname.substring(this.targetNamespace.length());
+                                } else {
+                                    translatedPrefix = "";
+                                }
                             }
 
                         }
