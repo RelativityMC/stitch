@@ -595,6 +595,7 @@ public class JarReader {
             Set<JarClassEntry> traversedClasses = StitchUtil.newIdentityHashSet();
 
             int joinedMethods = 1;
+            int joinedRecordFields = 1;
             int uniqueMethods = 0;
 
             Collection<JarMethodEntry> checkedMethods = StitchUtil.newIdentityHashSet();
@@ -631,12 +632,29 @@ public class JarReader {
                                     value.isNonObfuscated = true;
                                 }
                             } else {
+                                JarFieldEntry capturedField = null;
                                 for (JarClassEntry key : mList) {
                                     JarMethodEntry value = key.getMethod(m.getKey());
                                     if (value != m) {
                                         key.methods.put(m.getKey(), m);
-                                        if (m.recordComponent == null) {
-                                            m.recordComponent = value.recordComponent;
+                                        if (value.recordComponent != null) {
+                                            if (m.recordComponent == null) { // propagate value record from one matching to this
+                                                m.recordComponent = value.recordComponent;
+                                            }
+
+                                            // propagate value record from this to matching fields
+                                            JarFieldEntry componentField = key.getField(value.recordComponent.getKey());
+                                            if (componentField != null) {
+                                                if (capturedField == null) {
+                                                    componentField.recordComponent = m.recordComponent;
+                                                    capturedField = componentField;
+                                                } else {
+                                                    key.fields.put(value.recordComponent.getKey(), capturedField);
+                                                    joinedRecordFields++;
+                                                }
+                                            } else {
+                                                System.err.println(String.format("Field for record component %s not found in class %s", value.recordComponent.getKey(), key.getKey()));
+                                            }
                                         }
                                         joinedMethods++;
                                     }
@@ -650,6 +668,7 @@ public class JarReader {
             }
 
             System.err.println("Joined " + joinedMethods + " MethodEntries (" + uniqueMethods + " unique, " + traversedClasses.size() + " classes).");
+            System.err.println("Joined " + joinedRecordFields + " record fields.");
         }
 
         System.err.println("Collecting additional information...");
