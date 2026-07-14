@@ -171,6 +171,8 @@ class GenState {
        return (name.length() <= 2 || (name.length() == 3 && name.charAt(2) == '_')) && name.charAt(0) != '<';
     }
 
+    private final Map<JarRecordComponentEntry, String> recordComponentNames = new IdentityHashMap<>();
+
     @Nullable
     private String getFieldName(ClassStorage storage, JarClassEntry c, JarFieldEntry f) {
         String patternInput = c.getFullyQualifiedName() + "/" + f.getKey();
@@ -190,14 +192,23 @@ class GenState {
 
         JarRecordComponentEntry recordComponent = c.getRecordComponent(f.getKey());
         boolean promoteRecordComponent = recordComponent != null;
+        if (recordComponentNames.containsKey(recordComponent)) {
+            return recordComponentNames.get(recordComponent);
+        }
 
         if (newToIntermediary != null) {
             EntryTriple findEntry = newToIntermediary.getField(c.getFullyQualifiedName(), f.getName(), f.getDescriptor());
             if (findEntry != null) {
                 if (promoteRecordComponent ? findEntry.getName().startsWith("comp_") : findEntry.getName().startsWith("field_")) {
+                    if (promoteRecordComponent) {
+                        this.recordComponentNames.put(recordComponent, findEntry.getName());
+                    }
                     return findEntry.getName();
                 } else {
                     String newName = next(f, promoteRecordComponent ? "comp" : "field");
+                    if (promoteRecordComponent) {
+                        this.recordComponentNames.put(recordComponent, newName);
+                    }
                     System.out.println(findEntry.getName() + " is now " + newName);
                     return newName;
                 }
@@ -210,9 +221,15 @@ class GenState {
                 findEntry = oldToIntermediary.getField(findEntry);
                 if (findEntry != null) {
                     if (promoteRecordComponent ? findEntry.getName().startsWith("comp_") : findEntry.getName().startsWith("field_")) {
+                        if (promoteRecordComponent) {
+                            this.recordComponentNames.put(recordComponent, findEntry.getName());
+                        }
                         return findEntry.getName();
                     } else {
                         String newName = next(f, promoteRecordComponent ? "comp" : "field");
+                        if (promoteRecordComponent) {
+                            this.recordComponentNames.put(recordComponent, newName);
+                        }
                         System.out.println(findEntry.getName() + " is now " + newName);
                         return newName;
                     }
@@ -221,6 +238,9 @@ class GenState {
         }
 
         String newName = next(f, promoteRecordComponent ? "comp" : "field");
+        if (promoteRecordComponent) {
+            recordComponentNames.put(recordComponent, newName);
+        }
         System.out.println("FIELD\t" + c.getFullyQualifiedName()
                 + "\t" + f.getDescriptor()
                 + "\t" + f.getName()
@@ -345,6 +365,9 @@ class GenState {
 
         JarRecordComponentEntry recordComponent = m.getRecordComponent();
         boolean promoteRecordComponent = recordComponent != null;
+        if (recordComponentNames.containsKey(recordComponent)) {
+            return recordComponentNames.get(recordComponent);
+        }
 
         if (newToOld != null || newToIntermediary != null) {
             Map<String, Set<String>> names = new HashMap<>();
@@ -398,9 +421,15 @@ class GenState {
                     methodNames.put(mm, s);
                 }
                 if (promoteRecordComponent ? s.startsWith("comp_") : s.startsWith("method_")) {
+                    if (promoteRecordComponent) {
+                        recordComponentNames.put(recordComponent, s);
+                    }
                     return s;
                 } else {
                     String newName = next(m, promoteRecordComponent ? "comp" : "method");
+                    if (promoteRecordComponent) {
+                        recordComponentNames.put(recordComponent, newName);
+                    }
                     System.out.println(s + " is now " + newName);
                     return newName;
                 }
@@ -408,6 +437,9 @@ class GenState {
         }
 
         String newName = next(m, promoteRecordComponent ? "comp" : "method");
+        if (promoteRecordComponent) {
+            recordComponentNames.put(recordComponent, newName);
+        }
         System.out.println("METHOD\t" + c.getFullyQualifiedName()
                 + "\t" + m.getDescriptor()
                 + "\t" + m.getName()
