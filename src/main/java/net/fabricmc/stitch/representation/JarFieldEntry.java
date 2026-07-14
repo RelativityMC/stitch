@@ -44,6 +44,10 @@ public class JarFieldEntry extends AbstractJarEntry {
         return super.getKey() + desc;
     }
 
+    public JarRecordComponentEntry getRecordComponent() {
+        return recordComponent;
+    }
+
     public void remap(JarClassEntry classEntry, String oldOwner, Remapper remapper) {
         String pastDesc = desc;
 
